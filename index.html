@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0_0 // NULL_OS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --text: #ffffff;
+            --dim: #444444;
+            --accent: #888888;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            cursor: none;
+            user-select: none;
+        }
+
+        /* Scanline effect */
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 200;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        #cursor {
+            width: 4px; height: 4px;
+            background: var(--text);
+            position: fixed;
+            pointer-events: none;
+            z-index: 1000;
+            mix-blend-mode: difference;
+        }
+
+        /* Layout Grid */
+        .frame {
+            position: absolute;
+            top: 20px; left: 20px; right: 20px; bottom: 20px;
+            border: 1px solid var(--dim);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--accent);
+            border-bottom: 1px solid var(--dim);
+            padding-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* The 0_0 Face */
+        .face-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transform: scale(1.5);
+        }
+
+        .eye-socket {
+            width: 60px; height: 60px;
+            display: flex; justify-content: center; align-items: center;
+            position: relative;
+        }
+
+        .eye-char {
+            font-size: 64px;
+            font-weight: 300;
+            position: absolute;
+            will-change: transform;
+        }
+
+        .pupil {
+            width: 10px; height: 10px;
+            background: var(--text);
+            border-radius: 50%;
+            position: absolute;
+            will-change: transform;
+        }
+
+        .nose {
+            font-size: 40px;
+            color: var(--dim);
+            margin-top: 8px;
+        }
+
+        .blink {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 0%;
+            background: var(--bg);
+            z-index: 10;
+            transition: height 0.08s ease-in-out;
+        }
+
+        /* Footer / Status Bar */
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--accent);
+            border-top: 1px solid var(--dim);
+            padding-top: 10px;
+        }
+
+        /* ASCII decorative element */
+        .ascii-deco {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            font-size: 8px;
+            line-height: 1;
+            color: var(--dim);
+            opacity: 0.5;
+        }
+
+        .tagline {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: var(--accent);
+            letter-spacing: 5px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="cursor"></div>
+
+    <div class="frame">
+        <div class="header">
+            <div>STATUS: ONLINE</div>
+            <div>NULL_OS v1.0.4</div>
+            <div id="clock">00:00:00</div>
+        </div>
+
+        <div class="main-content">
+            <div class="face-container">
+                <div class="eye-socket">
+                    <div class="blink"></div>
+                    <div class="eye-char">0</div>
+                    <div class="pupil"></div>
+                </div>
+                <div class="nose">_</div>
+                <div class="eye-socket">
+                    <div class="blink"></div>
+                    <div class="eye-char">0</div>
+                    <div class="pupil"></div>
+                </div>
+            </div>
+
+            <div class="tagline">Always Watching</div>
+        </div>
+
+        <div class="ascii-deco">
+          ┌────────────────┐<br>
+          │ ░░░░░░░░░░░░░░ │<br>
+          │ INPUT_TRACKING │<br>
+          │ ░░░░░░░░░░░░░░ │<br>
+          └────────────────┘
+        </div>
+
+        <div class="footer">
+            <div>COORDINATES: <span id="coords">X:000 Y:000</span></div>
+            <div>SYSTEMS_OPTIMAL</div>
+            <div>[ TRACKING_ACTIVE ]</div>
+        </div>
+    </div>
+
+    <script>
+        const eyeChars = document.querySelectorAll('.eye-char');
+        const pupils = document.querySelectorAll('.pupil');
+        const lids = document.querySelectorAll('.blink');
+        const cursor = document.getElementById('cursor');
+        const coordsDisplay = document.getElementById('coords');
+        const clockDisplay = document.getElementById('clock');
+
+        // Clock logic
+        function updateClock() {
+            const now = new Date();
+            clockDisplay.innerText = now.toTimeString().split(' ')[0];
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        window.addEventListener('mousemove', (e) => {
+            const { clientX: mouseX, clientY: mouseY } = e;
+            
+            // Cursor
+            cursor.style.left = `${mouseX - 2}px`;
+            cursor.style.top = `${mouseY - 2}px`;
+
+            // Display Coordinates
+            coordsDisplay.innerText = `X:${String(mouseX).padStart(3, '0')} Y:${String(mouseY).padStart(3, '0')}`;
+
+            eyeChars.forEach((eye, i) => {
+                const pupil = pupils[i];
+                const rect = eye.parentElement.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+
+                const angle = Math.atan2(mouseY - centerY, mouseX - centerX);
+                const dist = Math.hypot(mouseX - centerX, mouseY - centerY);
+                
+                // Increased range of motion for better tracking
+                const maxEyeMove = 12;   
+                const maxPupilMove = 22; 
+                
+                const eyeMove = Math.min(dist / 30, maxEyeMove);
+                const pupilMove = Math.min(dist / 15, maxPupilMove);
+
+                const ex = Math.cos(angle) * eyeMove;
+                const ey = Math.sin(angle) * eyeMove;
+                
+                const px = Math.cos(angle) * pupilMove;
+                const py = Math.sin(angle) * pupilMove;
+
+                eye.style.transform = `translate(${ex}px, ${ey}px)`;
+                pupil.style.transform = `translate(${px}px, ${py}px)`;
+            });
+        });
+
+        // Organic blinking
+        function triggerBlink() {
+            lids.forEach(l => l.style.height = '100%');
+            setTimeout(() => {
+                lids.forEach(l => l.style.height = '0%');
+            }, 100);
+            
+            setTimeout(triggerBlink, Math.random() * 6000 + 2000);
+        }
+        triggerBlink();
+
+        // Interactive "Wink" on click
+        window.addEventListener('mousedown', () => {
+            const randomEye = Math.floor(Math.random() * 2);
+            lids[randomEye].style.height = '100%';
+        });
+        window.addEventListener('mouseup', () => {
+            lids.forEach(l => l.style.height = '0%');
+        });
+
+    </script>
+</body>
+</html>
