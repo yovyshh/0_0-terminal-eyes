@@ -198,6 +198,8 @@
     </div>
 
     <script>
+        const faceContainer = document.querySelector('.face-container');
+        const nose = document.querySelector('.nose');
         const eyeChars = document.querySelectorAll('.eye-char');
         const pupils = document.querySelectorAll('.pupil');
         const lids = document.querySelectorAll('.blink');
@@ -222,6 +224,18 @@
 
             // Display Coordinates
             coordsDisplay.innerText = `X:${String(mouseX).padStart(3, '0')} Y:${String(mouseY).padStart(3, '0')}`;
+
+            // Center of screen for face/nose parallax
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            const offsetX = (mouseX - winW / 2) / winW;
+            const offsetY = (mouseY - winH / 2) / winH;
+
+            // Slow move for the whole face
+            faceContainer.style.transform = `scale(1.5) translate(${offsetX * 20}px, ${offsetY * 20}px)`;
+            
+            // Even slower move for the nose
+            nose.style.transform = `translate(${offsetX * 10}px, ${offsetY * 10}px)`;
 
             eyeChars.forEach((eye, i) => {
                 const pupil = pupils[i];
