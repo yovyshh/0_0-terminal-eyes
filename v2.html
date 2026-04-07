@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V T P // NULL_OS_v2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #030303;
+            --text: #ffffff;
+            --dim: #1a1a1a;
+            --accent: #444444;
+            --primary: #ffffff;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: none;
+            user-select: none;
+        }
+
+        /* Ambient Scanning Grid */
+        #grid-layer {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(var(--dim) 1px, transparent 1px), 
+                              linear-gradient(90deg, var(--dim) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.2;
+            z-index: 1;
+        }
+
+        /* High-End Scanline Effect */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+            z-index: 1000;
+            background-size: 100% 4px, 4px 100%;
+            pointer-events: none;
+        }
+
+        #cursor {
+            width: 4px; height: 4px;
+            background: var(--text);
+            position: fixed;
+            pointer-events: none;
+            z-index: 2000;
+            mix-blend-mode: difference;
+        }
+
+        /* UI Frame Elements */
+        .ui-element {
+            position: absolute;
+            font-size: 10px;
+            color: var(--accent);
+            letter-spacing: 2px;
+            z-index: 10;
+            transition: opacity 1s ease;
+        }
+
+        /* Intro Styling */
+        #intro-container {
+            text-align: center;
+            z-index: 100;
+            transition: all 1s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+
+        #name-text {
+            font-size: 38px;
+            font-weight: 100;
+            letter-spacing: 15px;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.6s ease;
+            text-transform: uppercase;
+        }
+
+        #name-text:hover {
+            letter-spacing: 25px;
+            opacity: 0.5;
+        }
+
+        /* Eye Interface */
+        #interface-layer {
+            display: none;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 1.2s cubic-bezier(0.2, 1, 0.3, 1);
+            z-index: 50;
+        }
+
+        .face-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transform: scale(2.5);
+        }
+
+        .eye-socket {
+            width: 50px; height: 50px;
+            display: flex; justify-content: center; align-items: center;
+            position: relative;
+            border: 1px solid var(--dim);
+        }
+
+        .eye-char { font-size: 50px; font-weight: 300; position: absolute; }
+        .pupil { width: 8px; height: 8px; background: var(--text); border-radius: 50%; position: absolute; }
+        .nose { font-size: 30px; color: var(--dim); margin-top: 5px; }
+        .blink { position: absolute; top: 0; left: 0; width: 100%; height: 0%; background: var(--bg); z-index: 10; transition: height 0.08s ease; }
+
+        /* Dynamic HUD Elements */
+        .corner-bracket { width: 20px; height: 20px; border: 1px solid var(--accent); position: absolute; }
+        .tl { top: 40px; left: 40px; border-right: 0; border-bottom: 0; }
+        .tr { top: 40px; right: 40px; border-left: 0; border-bottom: 0; }
+        .bl { bottom: 40px; left: 40px; border-right: 0; border-top: 0; }
+        .br { bottom: 40px; right: 40px; border-left: 0; border-top: 0; }
+
+        .data-feed { bottom: 100px; left: 40px; width: 150px; height: 200px; overflow: hidden; font-size: 8px; color: #1a1a1a; line-height: 1.5; }
+
+    </style>
+</head>
+<body>
+
+    <div id="cursor"></div>
+    <div id="grid-layer"></div>
+
+    <!-- UI Overlay (Initially Hidden) -->
+    <div class="ui-element tl corner-bracket"></div>
+    <div class="ui-element tr corner-bracket"></div>
+    <div class="ui-element bl corner-bracket"></div>
+    <div class="ui-element br corner-bracket"></div>
+
+    <div class="ui-element" style="top: 45px; left: 70px;">[ NULL_OS_v2.0 ]</div>
+    <div class="ui-element" style="top: 45px; right: 70px;" id="clock">00:00:00</div>
+    <div class="ui-element" style="bottom: 45px; left: 70px;" id="coords">X:000 Y:000</div>
+    <div class="ui-element" style="bottom: 45px; right: 70px;">STABLE_CONNECTION</div>
+
+    <div id="data-feed" class="ui-element data-feed"></div>
+
+    <!-- Phase 1: Interactive Intro -->
+    <div id="intro-container">
+        <h1 id="name-text" onclick="bootSequence()">Vaishnav T Prakash</h1>
+        <div style="font-size: 8px; margin-top: 30px; letter-spacing: 5px; color: #222;">SYSTEM_STANDBY // CLICK_TO_BOOT</div>
+    </div>
+
+    <!-- Phase 2: System Interface -->
+    <div id="interface-layer">
+        <div class="face-container" id="face">
+            <div class="eye-socket">
+                <div class="blink"></div>
+                <div class="eye-char">0</div>
+                <div class="pupil"></div>
+            </div>
+            <div class="nose" id="nose">_</div>
+            <div class="eye-socket">
+                <div class="blink"></div>
+                <div class="eye-char">0</div>
+                <div class="pupil"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const cursor = document.getElementById('cursor');
+        const intro = document.getElementById('intro-container');
+        const interface = document.getElementById('interface-layer');
+        const face = document.getElementById('face');
+        const nose = document.getElementById('nose');
+        const eyeChars = document.querySelectorAll('.eye-char');
+        const pupils = document.querySelectorAll('.pupil');
+        const lids = document.querySelectorAll('.blink');
+        const feed = document.getElementById('data-feed');
+
+        let isBooted = false;
+
+        // Dynamic Background Feed
+        function updateFeed() {
+            const entry = document.createElement('div');
+            entry.innerText = `TRK_0x${Math.floor(Math.random()*0xFFFF).toString(16).toUpperCase()} // ${Math.random().toFixed(4)}`;
+            feed.prepend(entry);
+            if(feed.children.length > 15) feed.lastElementChild.remove();
+        }
+        setInterval(updateFeed, 200);
+
+        function bootSequence() {
+            if (isBooted) return;
+            isBooted = true;
+
+            intro.style.opacity = '0';
+            intro.style.transform = 'translateY(-30px) scale(1.1)';
+
+            setTimeout(() => {
+                intro.style.display = 'none';
+                interface.style.display = 'block';
+                
+                setTimeout(() => {
+                    interface.style.opacity = '1';
+                    interface.style.transform = 'scale(1)';
+                    triggerBlink();
+                }, 100);
+            }, 1000);
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            const { clientX: mouseX, clientY: mouseY } = e;
+            cursor.style.left = `${mouseX - 2}px`;
+            cursor.style.top = `${mouseY - 2}px`;
+
+            // Update UI elements
+            document.getElementById('coords').innerText = `X:${String(mouseX).padStart(3, '0')} Y:${String(mouseY).padStart(3, '0')}`;
+
+            if (isBooted) {
+                const winW = window.innerWidth;
+                const winH = window.innerHeight;
+                const offX = (mouseX - winW / 2) / winW;
+                const offY = (mouseY - winH / 2) / winH;
+
+                // Face Parallax
+                face.style.transform = `scale(2.5) translate(${offX * 20}px, ${offY * 20}px)`;
+                nose.style.transform = `translate(${offX * 10}px, ${offY * 10}px)`;
+
+                eyeChars.forEach((eye, i) => {
+                    const pupil = pupils[i];
+                    const rect = eye.parentElement.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+
+                    const angle = Math.atan2(mouseY - centerY, mouseX - centerX);
+                    const dist = Math.hypot(mouseX - centerX, mouseY - centerY);
+                    
+                    const eMove = Math.min(dist / 50, 8);
+                    const pMove = Math.min(dist / 25, 15);
+
+                    eye.style.transform = `translate(${Math.cos(angle) * eMove}px, ${Math.sin(angle) * eMove}px)`;
+                    pupil.style.transform = `translate(${Math.cos(angle) * pMove}px, ${Math.sin(angle) * pMove}px)`;
+                });
+            }
+        });
+
+        function updateClock() {
+            document.getElementById('clock').innerText = new Date().toTimeString().split(' ')[0];
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        function triggerBlink() {
+            if (!isBooted) return;
+            lids.forEach(l => l.style.height = '100%');
+            setTimeout(() => lids.forEach(l => l.style.height = '0%'), 100);
+            setTimeout(triggerBlink, Math.random() * 5000 + 2000);
+        }
+
+        window.addEventListener('mousedown', () => {
+            if (!isBooted) return;
+            lids[Math.floor(Math.random() * 2)].style.height = '100%';
+        });
+        window.addEventListener('mouseup', () => lids.forEach(l => l.style.height = '0%'));
+
+    </script>
+</body>
+</html>
